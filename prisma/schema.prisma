@@ -12,6 +12,7 @@ model Score {
   id        Int      @id @default(autoincrement())
   value     Int
   name      String
+  boardSize Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
