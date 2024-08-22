@@ -52,10 +52,11 @@ export class ScoreService {
       SELECT id, CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
       FROM "Score"
       WHERE "boardSize" = ${boardSize}
-      AND id = ${id}
       ORDER BY value DESC
     `;
 
-    return { rank: rankQuery[0].rank };
+    const rank = rankQuery.find((r) => r.id === score.id);
+
+    return { rank: rank?.rank };
   }
 }
