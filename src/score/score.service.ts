@@ -55,7 +55,7 @@ export class ScoreService {
       ORDER BY value DESC
     `;
 
-    const rank = rankQuery.find((r) => r.id === score.id);
+    const rank = rankQuery.find((r) => r.id === score.id); //
 
     return { rank: rank?.rank };
   }
