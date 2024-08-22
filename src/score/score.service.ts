@@ -14,31 +14,48 @@ export class ScoreService {
   }
 
   async findTopTen() {
-    return this.prisma.$queryRaw`
+    const getQuery = (boardSize: number) => {
+      return this.prisma.$queryRaw`
       SELECT
         id,
         value,
         name,
+        "boardSize",
         -- have to cast the rank to integer because by default it is a bigint
         CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
       FROM "Score"
+      where "boardSize" = ${boardSize}
       ORDER BY value DESC
       LIMIT 10;
     `;
+    };
+    const [fourOnFour, sixOnSix] = await Promise.all([
+      getQuery(4),
+      getQuery(6),
+    ]);
+
+    return { four: fourOnFour, six: sixOnSix };
   }
 
-  async findOne(id: number) {
-    return this.prisma.score.findUnique({ where: { id: id } });
-  }
+  async getRank(id: number) {
+    const score = await this.prisma.score.findUnique({ where: { id: id } });
 
-  async update(id: number, updateScoreInput: Prisma.ScoreUpdateInput) {
-    return this.prisma.score.update({
-      where: { id: id },
-      data: updateScoreInput,
-    });
-  }
+    if (!score) {
+      throw new Error(`Score with id ${id} not found`);
+    }
 
-  async remove(id: number) {
-    return this.prisma.score.delete({ where: { id: id } });
+    const { boardSize } = score;
+
+    const rankQuery = await this.prisma.$queryRaw<
+      { id: number; rank: number }[]
+    >`
+      SELECT id, CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
+      FROM "Score"
+      WHERE "boardSize" = ${boardSize}
+      AND id = ${id}
+      ORDER BY value DESC
+    `;
+
+    return { rank: rankQuery[0].rank };
   }
 }

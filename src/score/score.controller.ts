@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ScoreService } from './score.service';
 import { Prisma } from '@prisma/client';
 
@@ -30,20 +22,7 @@ export class ScoreController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.scoreService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateScoreInput: Prisma.ScoreUpdateInput,
-  ) {
-    return this.scoreService.update(+id, updateScoreInput);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.scoreService.remove(+id);
+  getRank(@Param('id') id: string) {
+    return this.scoreService.getRank(+id);
   }
 }
