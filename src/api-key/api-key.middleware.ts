@@ -13,22 +13,19 @@ export class ApiKeyMiddleware implements NestMiddleware {
   async use(req: any, res: any, next: () => void) {
     const originHeaderValue = req.header('origin');
     const apikeyHeaderValue = req.header('api-key');
-    if (
-      !originHeaderValue ||
-      !!apikeyHeaderValue ||
-      originHeaderValue !== process.env.FRONTEND_URL
-    ) {
-      throw new HttpException('Unexpected error', HttpStatus.UNAUTHORIZED);
-    }
 
     const apiKey = await this.prisma.apiKey.findUnique({
       where: {
         key: apikeyHeaderValue,
       },
     });
-
-    if (!apiKey) {
-      throw new HttpException('Invalid API Key', HttpStatus.UNAUTHORIZED);
+    if (
+      !originHeaderValue ||
+      !apikeyHeaderValue ||
+      originHeaderValue !== process.env.FRONTEND_URL ||
+      !apiKey
+    ) {
+      throw new HttpException('Unexpected error', HttpStatus.UNAUTHORIZED);
     }
 
     next();
