@@ -1,14 +1,8 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ScoreModule } from './score/score.module';
 import { ImagesModule } from './images/images.module';
-import { ApiKeyMiddleware } from './api-key/api-key.middleware';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -17,9 +11,5 @@ import { PrismaService } from './prisma.service';
   providers: [AppService, PrismaService],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(ApiKeyMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
+  configure() {}
 }
