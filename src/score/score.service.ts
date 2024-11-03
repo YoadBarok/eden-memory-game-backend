@@ -20,7 +20,7 @@ export class ScoreService {
       value,
       name,
       "boardSize",
-      ranking
+      "rank"
     FROM
       (
         SELECT
@@ -34,15 +34,15 @@ export class ScoreService {
             ORDER BY
               value DESC
             ) AS INTEGER
-          ) AS "ranking"
+          ) AS "rank"
         FROM
           "Score"
       )rankQuery
     WHERE
-      ranking <= 10
+      "rank" <= 10
     ORDER BY
       "boardSize",
-      "ranking";
+      "rank";
     `;
 
     const results = (await query) as Score[];
@@ -61,26 +61,18 @@ export class ScoreService {
     );
   }
 
-  async getRank(id: number) {
-    const score = await this.prisma.score.findUnique({ where: { id: id } });
-
-    if (!score) {
-      throw new Error(`Score with id ${id} not found`);
-    }
-
-    const { boardSize } = score;
-
+  async getRank(boardSize: number, value: number) {
     const rankQuery = await this.prisma.$queryRaw<
-      { id: number; rank: number }[]
+      { value: number; rank: number }[]
     >`
-      SELECT id, CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
+      SELECT id, value, CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
       FROM "Score"
-      WHERE "boardSize" = ${boardSize}
+      WHERE "boardSize" = ${boardSize} AND value >= ${value}
       ORDER BY value DESC
     `;
 
-    const rank = rankQuery.find((r) => r.id === score.id);
+    const rank = rankQuery.find((r) => r.rank && r.value === value);
 
-    return { rank: rank?.rank };
+    return { rank: rank?.rank || rankQuery.length + 1 };
   }
 }

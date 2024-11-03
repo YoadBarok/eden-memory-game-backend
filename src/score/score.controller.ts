@@ -21,8 +21,11 @@ export class ScoreController {
     return this.scoreService.findTopTen();
   }
 
-  @Get(':id')
-  getRank(@Param('id') id: string) {
-    return this.scoreService.getRank(+id);
+  @Get(':boardSize/:value')
+  getRank(
+    @Param('value') value: string,
+    @Param('boardSize') boardSize: string,
+  ) {
+    return this.scoreService.getRank(+boardSize, +value);
   }
 }
