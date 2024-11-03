@@ -14,27 +14,51 @@ export class ScoreService {
   }
 
   async findTopTen() {
-    const getQuery = (boardSize: number) => {
-      return this.prisma.$queryRaw`
-      SELECT
-        id,
-        value,
-        name,
-        "boardSize",
-        -- have to cast the rank to integer because by default it is a bigint
-        CAST(RANK() OVER (ORDER BY value DESC) AS INTEGER) as rank
-      FROM "Score"
-      where "boardSize" = ${boardSize}
-      ORDER BY value DESC
-      LIMIT 10;
+    const query = this.prisma.$queryRaw`
+     SELECT
+      id,
+      value,
+      name,
+      "boardSize",
+      ranking
+    FROM
+      (
+        SELECT
+          id,
+          value,
+          name,
+          "boardSize",
+          CAST(
+            RANK() OVER (
+              PARTITION BY "boardSize"
+            ORDER BY
+              value DESC
+            ) AS INTEGER
+          ) AS "ranking"
+        FROM
+          "Score"
+      )rankQuery
+    WHERE
+      ranking <= 10
+    ORDER BY
+      "boardSize",
+      "ranking";
     `;
-    };
-    const [fourOnFour, sixOnSix] = await Promise.all([
-      getQuery(4),
-      getQuery(6),
-    ]);
 
-    return { four: fourOnFour, six: sixOnSix };
+    const results = (await query) as Score[];
+
+    return results.reduce(
+      (acc, curr) => {
+        if (curr.boardSize === 4) {
+          acc.four.push(curr);
+        }
+        if (curr.boardSize === 6) {
+          acc.six.push(curr);
+        }
+        return acc;
+      },
+      { four: [], six: [] },
+    );
   }
 
   async getRank(id: number) {
